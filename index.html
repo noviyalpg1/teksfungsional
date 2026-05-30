@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Pembelajaran: Teks Fungsional Dunia Kerja</title>
+    <!-- Menggunakan font eksternal untuk tipografi profesional -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Menggunakan Phosphor Icons (CDN) untuk ikon antarmuka -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* === VARIABEL CSS UNTUK TEMA PROFESIONAL BIRU === */
+        :root {
+            --primary: #1E3A8A;       /* Biru tua korporat */
+            --primary-light: #3B82F6; /* Biru cerah untuk aksen/hover */
+            --primary-dark: #172554;
+            --secondary: #F59E0B;     /* Kuning/Amber untuk highlight penting */
+            --bg-body: #F3F4F6;       /* Abu-abu sangat terang untuk latar */
+            --bg-card: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+            --success: #10B981;
+            --danger: #EF4444;
+            
+            --base-font-size: 16px;   /* Ukuran dasar yang bisa diubah via kontrol PID */
+            --sidebar-width: 280px;
+            --header-height: 70px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* === RESET & DASAR === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-size: var(--base-font-size);
+            line-height: 1.6;
+            overflow: hidden; /* Mencegah scroll pada body, scroll diatur di area konten */
+            transition: font-size 0.3s ease;
+        }
+
+        /* === LOADING SCREEN === */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary); color: white;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 9999; transition: opacity 0.5s ease;
+        }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* === LAYOUT UTAMA === */
+        #app-container { display: flex; height: 100vh; width: 100vw; }
+
+        /* === SIDEBAR === */
+        #sidebar {
+            width: var(--sidebar-width); background-color: var(--primary); color: white;
+            display: flex; flex-direction: column; transition: var(--transition);
+            box-shadow: var(--shadow-lg); z-index: 10;
+        }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-header h1 { font-size: 1.2rem; font-weight: 700; line-height: 1.3; margin-bottom: 5px; }
+        .sidebar-header p { font-size: 0.85rem; color: #93C5FD; }
+        
+        .sidebar-nav { flex: 1; padding: 20px 0; overflow-y: auto; }
+        .nav-item {
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px;
+            color: #DBEAFE; text-decoration: none; font-weight: 500;
+            transition: var(--transition); cursor: pointer; border-left: 4px solid transparent;
+        }
+        .nav-item:hover { background-color: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background-color: var(--primary-dark); color: white; border-left-color: var(--secondary); }
+        .nav-item i { font-size: 1.4rem; }
+
+        .sidebar-footer { padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; font-size: 0.8rem; color: #93C5FD; }
+
+        /* === AREA KONTEN === */
+        #main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* === TOP BAR (PID CONTROLS) === */
+        #top-bar {
+            height: var(--header-height); background: var(--bg-card);
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 30px; box-shadow: var(--shadow-sm); z-index: 5;
+        }
+        .mobile-menu-btn { display: none; font-size: 1.5rem; background: none; border: none; cursor: pointer; color: var(--primary); }
+        .clock { font-size: 1.2rem; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
+        
+        .pid-controls { display: flex; gap: 10px; align-items: center; }
+        .control-btn {
+            background: var(--bg-body); border: 1px solid var(--border); color: var(--text-main);
+            width: 44px; height: 44px; border-radius: var(--radius-md);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: var(--transition); font-size: 1.2rem; position: relative;
+        }
+        /* Touch target optimal untuk Layar Interaktif */
+        .control-btn:hover { background: var(--primary-light); color: white; border-color: var(--primary-light); }
+        .control-btn.active { background: var(--primary); color: white; }
+        
+        /* Bantuan Tooltip */
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute; top: 110%; left: 50%; transform: translateX(-50%);
+            background: #333; color: #fff; padding: 5px 10px; border-radius: 4px;
+            font-size: 0.8rem; white-space: nowrap; z-index: 20; pointer-events: none;
+        }
+
+        /* === CONTENT VIEWS === */
+        #content-wrapper { flex: 1; padding: 30px; overflow-y: auto; scroll-behavior: smooth; }
+        .view-section { display: none; animation: slideUp 0.4s ease forwards; max-width: 1200px; margin: 0 auto; }
+        .view-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* === KOMPONEN UMUM === */
+        .card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-md); margin-bottom: 25px; }
+        .page-title { color: var(--primary); font-size: 2rem; margin-bottom: 20px; font-weight: 700; border-bottom: 3px solid var(--primary-light); display: inline-block; padding-bottom: 5px; }
+        h2 { color: var(--primary-dark); margin-bottom: 15px; font-size: 1.5rem; }
+        h3 { color: var(--primary); margin: 15px 0 10px; font-size: 1.2rem; }
+        p { margin-bottom: 15px; }
+        
+        .btn {
+            background: var(--primary); color: white; border: none; padding: 12px 24px;
+            border-radius: var(--radius-md); font-size: 1rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--secondary); color: white; }
+        .btn-secondary:hover { background: #D97706; }
+
+        /* === KHUSUS BERANDA === */
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        
+        /* Progress Kelas */
+        .progress-box { text-align: center; }
+        .progress-circle {
+            width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(var(--success) 0%, var(--border) 0%);
+            display: flex; justify-content: center; align-items: center; margin: 0 auto 15px;
+            position: relative; transition: background 1s ease;
+        }
+        .progress-inner { width: 120px; height: 120px; border-radius: 50%; background: white; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .progress-val { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        
+        /* Thumbnail Aneh Sesuai Permintaan */
+        .thumbnail-card { background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; text-align: center; overflow: hidden; position: relative;}
+        .thumbnail-img { width: 100%; height: 120px; background: rgba(255,255,255,0.1); margin-bottom: 15px; display: flex; justify-content: center; align-items: center;}
+        
+        .quote-card { background: var(--primary-light); color: white; font-style: italic; font-size: 1.2rem; text-align: center; padding: 30px; }
+
+        /* === KHUSUS MATERI (TABS) === */
+        .tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 25px; overflow-x: auto; }
+        .tab-btn {
+            padding: 15px 25px; background: none; border: none; font-size: 1.1rem; font-weight: 600;
+            color: var(--text-muted); cursor: pointer; border-bottom: 4px solid transparent; margin-bottom: -2px;
+            white-space: nowrap;
+        }
+        .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; animation: slideUp 0.3s ease forwards; }
+        .tab-content.active { display: block; }
+        
+        .stimulus-box { background: #DBEAFE; border-left: 5px solid var(--primary); padding: 20px; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin-bottom: 20px; display: flex; gap: 20px; align-items: center; }
+        .stimulus-img { width: 150px; flex-shrink: 0; }
+        
+        .interactive-quiz { background: var(--bg-body); padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .word-options { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .word-btn { padding: 10px 20px; background: white; border: 2px solid var(--border); border-radius: 20px; cursor: pointer; font-weight: 500; transition: var(--transition); }
+        .word-btn:hover { border-color: var(--primary-light); }
+        .word-btn.correct { background: var(--success); color: white; border-color: var(--success); }
+        .word-btn.wrong { background: var(--danger); color: white; border-color: var(--danger); animation: shake 0.4s; }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+
+        /* === KHUSUS LATIHAN === */
+        .case-study { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px; background: #F9FAFB; }
+        .case-q { font-weight: 600; margin-top: 15px; }
+        .answer-area { width: 100%; min-height: 100px; padding: 15px; border: 2px solid var(--border); border-radius: var(--radius-md); font-family: inherit; font-size: inherit; margin: 10px 0; resize: vertical; }
+        .answer-area:focus { outline: none; border-color: var(--primary-light); }
+        .feedback-box { display: none; margin-top: 15px; padding: 15px; background: #D1FAE5; border-left: 4px solid var(--success); border-radius: 4px; color: #065F46; }
+
+        /* Drag & Drop Area */
+        .dnd-container { display: flex; flex-direction: column; gap: 20px; background: var(--bg-body); padding: 20px; border-radius: var(--radius-md); }
+        .dnd-pool, .dnd-target { min-height: 60px; padding: 10px; border: 2px dashed var(--border); border-radius: var(--radius-md); display: flex; flex-direction: column; gap: 10px; background: white;}
+        .dnd-target { border-color: var(--primary); background: #F0F9FF; }
+        .dnd-item { background: var(--primary); color: white; padding: 15px; border-radius: var(--radius-md); cursor: grab; font-weight: 500; box-shadow: var(--shadow-sm); }
+        .dnd-item:active { cursor: grabbing; opacity: 0.8; }
+        .dnd-item.dragging { opacity: 0.5; }
+
+        /* === KHUSUS REFLEKSI === */
+        .reflection-form { display: flex; flex-direction: column; gap: 20px; }
+
+        /* === POINTER MODE & HIGHLIGHT PID === */
+        body.pointer-mode { cursor: crosshair; }
+        body.pointer-mode .card:hover, body.pointer-mode p:hover, body.pointer-mode h2:hover, body.pointer-mode li:hover {
+            background-color: rgba(253, 230, 138, 0.4); /* Highlight kuning muda saat dihover pointer */
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        /* === TOAST & MODAL === */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; border-left: 5px solid var(--primary); padding: 15px 25px; border-radius: 4px; box-shadow: var(--shadow-lg); font-weight: 500; animation: slideInRight 0.3s ease forwards; display: flex; align-items: center; gap: 10px; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* === FOOTER === */
+        .app-footer {
+            background: white;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            margin-left: -30px;
+            margin-right: -30px;
+            margin-bottom: -30px; /* Offset padding from content-wrapper */
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.05);
+            padding: 20px 30px;
+        }
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+        @media (min-width: 600px) {
+            .footer-container { flex-direction: row; }
+        }
+        .footer-brand { display: flex; align-items: center; gap: 15px; color: #1E293B; }
+        .footer-logo {
+            width: 32px; height: 32px; background: var(--primary-light);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 14px; box-shadow: var(--shadow-sm);
+        }
+        .footer-title { font-weight: 800; font-size: 1.1rem; line-height: 1; margin-bottom: 2px; }
+        .footer-copyright { font-size: 0.75rem; color: #64748B; margin-bottom: 0; }
+        .footer-socials { display: flex; align-items: center; gap: 15px; }
+        .social-icon {
+            width: 40px; height: 40px; border-radius: 50%; background: #F8FAFC;
+            display: flex; align-items: center; justify-content: center;
+            color: #64748B; border: 1px solid var(--border); text-decoration: none;
+            transition: var(--transition); box-shadow: var(--shadow-sm); font-size: 1.2rem;
+        }
+        .social-icon.instagram:hover { background: #FCE7F3; color: #DB2777; border-color: #FBCFE8; }
+        .social-icon.tiktok:hover { background: #E0F2FE; color: #0284C7; border-color: #BAE6FD; }
+        .social-icon.facebook:hover { background: #E0E7FF; color: #4F46E5; border-color: #C7D2FE; }
+        .social-icon.youtube:hover { background: #FEE2E2; color: #DC2626; border-color: #FECACA; }
+
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .stimulus-box { flex-direction: column; }
+        }
+        @media (max-width: 768px) {
+            #sidebar { position: fixed; left: -100%; height: 100vh; z-index: 100; }
+            #sidebar.open { left: 0; }
+            .mobile-menu-btn { display: block; }
+            #top-bar { padding: 0 15px; }
+            .pid-controls { gap: 5px; }
+            .control-btn { width: 38px; height: 38px; font-size: 1rem; }
+            .card { padding: 15px; }
+            .page-title { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <h2>Menyiapkan Ruang Kelas Digital...</h2>
+        <p>Memuat materi & interaksi</p>
+    </div>
+
+    <div id="app-container">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h1>Media Pembelajaran<br>Bahasa Indonesia</h1>
+                <p>Kelas XI - SMA</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" onclick="navigate('beranda')"><i class="ph ph-house"></i> Beranda</a>
+                <a class="nav-item" onclick="navigate('materi')"><i class="ph ph-book-open"></i> Materi</a>
+                <a class="nav-item" onclick="navigate('latihan')"><i class="ph ph-pencil-line"></i> Latihan</a>
+                <a class="nav-item" onclick="navigate('refleksi')"><i class="ph ph-brain"></i> Refleksi</a>
+                <a class="nav-item" onclick="handlePengembangClick()"><i class="ph ph-code"></i> Pengembang</a>
+            </nav>
+            <div class="sidebar-footer">
+                <p>Versi PID 1.0.0</p>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="main-area">
+            <!-- Top Controls bar for PID -->
+            <header id="top-bar">
+                <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="ph ph-list"></i></button>
+                <div class="clock" id="realtime-clock">00:00:00</div>
+                <div class="pid-controls">
+                    <button class="control-btn" onclick="changeFontSize(-2)" data-tooltip="Perkecil Teks"><i class="ph ph-text-aa"></i>-</button>
+                    <button class="control-btn" onclick="changeFontSize(2)" data-tooltip="Perbesar Teks"><i class="ph ph-text-aa"></i>+</button>
+                    <button class="control-btn" id="btn-pointer" onclick="togglePointerMode()" data-tooltip="Mode Penunjuk PID"><i class="ph ph-cursor"></i></button>
+                    <button class="control-btn" id="btn-sfx" onclick="toggleSfx()" data-tooltip="BGM & Efek Suara"><i class="ph ph-speaker-high"></i></button>
+                    <button class="control-btn" onclick="toggleFullscreen()" data-tooltip="Layar Penuh"><i class="ph ph-corners-out"></i></button>
+                </div>
+            </header>
+
+            <div id="content-wrapper">
+                
+                <!-- VIEW: BERANDA -->
+                <section id="view-beranda" class="view-section active">
+                    <h1 class="page-title">Selamat Datang di Kelas Digital</h1>
+                    <p>Fokus Pembelajaran: <strong>Teks Fungsional Dunia Kerja</strong></p>
+                    
+                    <div class="dashboard-grid">
+                        <div class="card quote-card">
+                            <i class="ph ph-quotes" style="font-size: 3rem; opacity: 0.5; margin-bottom: 10px; display: block;"></i>
+                            "Komunikasi yang efektif dan santun di dunia kerja adalah cerminan dari profesionalisme dan karakter seseorang."
+                        </div>
+                        
+                        <div class="card progress-box">
+                            <h3>Progress Kelas</h3>
+                            <p>Siswa yang telah aktif</p>
+                            <div class="progress-circle" id="class-progress-ui">
+                                <div class="progress-inner">
+                                    <span class="progress-val" id="progress-text">0/32</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline" style="width: 100%; justify-content: center;" onclick="simulateStudentProgress()">Perbarui Data</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: MATERI -->
+                <section id="view-materi" class="view-section">
+                    <h1 class="page-title">Materi Pembelajaran</h1>
+                    
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="openTab('materi1')">Konsep Dasar</button>
+                        <button class="tab-btn" onclick="openTab('materi2')">Kosakata Formal</button>
+                        <button class="tab-btn" onclick="openTab('materi3')">Penyusunan Teks</button>
+                    </div>
+
+                    <!-- Materi 1 -->
+                    <div id="tab-materi1" class="tab-content active card">
+                        <h2>1. Mengidentifikasi Teks Fungsional</h2>
+                        <div class="stimulus-box">
+                            <div class="stimulus-img">
+                                <!-- SVG Ilustrasi Kantor -->
+                                <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="200" height="150" fill="#E0F2FE" rx="10"/>
+                                    <rect x="20" y="40" width="160" height="90" fill="#BAE6FD" rx="5"/>
+                                    <rect x="40" y="60" width="60" height="40" fill="#fff" rx="3"/>
+                                    <path d="M130 130 l-10 -40 l20 0 z" fill="#3B82F6"/> <!-- Person -->
+                                    <circle cx="130" cy="80" r="12" fill="#3B82F6"/>
+                                    <rect x="45" y="65" width="40" height="4" fill="#94A3B8"/>
+                                    <rect x="45" y="75" width="50" height="4" fill="#94A3B8"/>
+                                    <text x="20" y="25" font-size="12" fill="#1E3A8A" font-weight="bold" font-family="sans-serif">Stimulus Visual PID</text>
+                                </svg>
+                            </div>
+                            <div>
+                                <p><strong>Perhatikan ilustrasi di samping!</strong></p>
+                                <p><em>"Pada layar ditampilkan ilustrasi sebuah kantor modern. Seorang staf administrasi harus mengirim pemberitahuan rapat penting kepada seluruh manajer divisi."</em></p>
+                                <p>Media apa yang paling tepat digunakan staf tersebut agar terkesan profesional?</p>
+                            </div>
+                        </div>
+                        
+                        <h3>Apa itu Teks Fungsional Dunia Kerja?</h3>
+                        <p>Teks fungsional adalah teks yang ditulis dengan tujuan pragmatis atau praktis tertentu untuk menyelesaikan pekerjaan atau memfasilitasi komunikasi di lingkungan profesional.</p>
+                        
+                        <h3>Jenis-jenis Utama:</h3>
+                        <ul>
+                            <li><strong>Surat Resmi:</strong> Komunikasi formal antar instansi atau kepada pihak luar.</li>
+                            <li><strong>Memo (Memorandum):</strong> Pesan singkat, padat, dan jelas untuk komunikasi internal (antar bagian dalam satu instansi).</li>
+                            <li><strong>Pengumuman:</strong> Informasi yang ditujukan untuk orang banyak/publik.</li>
+                            <li><strong>Email Profesional:</strong> Bentuk digital yang cepat namun tetap membutuhkan etika penulisan formal.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Materi 2 -->
+                    <div id="tab-materi2" class="tab-content card">
+                        <h2>2. Pemilihan Kosakata & Etika Bahasa</h2>
+                        <p>Dalam dunia kerja, bahasa yang digunakan harus memenuhi prinsip: <strong>Formal, Santun, dan Efektif</strong>. Hindari penggunaan bahasa gaul, singkatan tidak baku, atau kalimat yang ambigu (bermakna ganda).</p>
+                        
+                        <div class="interactive-quiz">
+                            <h3>Aktivitas Cepat (Klik pada PID):</h3>
+                            <p>Manakah kata yang paling tepat dan baku digunakan dalam pembukaan surat resmi?</p>
+                            <div class="word-options">
+                                <button class="word-btn" onclick="checkWord(this, false)">Halo pak/bu,</button>
+                                <button class="word-btn" onclick="checkWord(this, true)">Dengan hormat,</button>
+                                <button class="word-btn" onclick="checkWord(this, false)">Salam kangen,</button>
+                                <button class="word-btn" onclick="checkWord(this, false)">Permisi,</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Materi 3 -->
+                    <div id="tab-materi3" class="tab-content card">
+                        <h2>3. Struktur dan Penyusunan</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                                <h3>Struktur Surat Resmi</h3>
+                                <ol style="margin-left: 20px; font-size: 0.95rem;">
+                                    <li>Kop Surat (Kepala Surat)</li>
+                                    <li>Nomor, Lampiran, Hal</li>
+                                    <li>Tanggal Surat</li>
+                                    <li>Alamat Tujuan</li>
+                                    <li>Salam Pembuka</li>
+                                    <li>Isi (Pembuka, Inti, Penutup)</li>
+                                    <li>Salam Penutup</li>
+                                    <li>Tanda tangan & Nama Terang</li>
+                                    <li>Tembusan (Jika ada)</li>
+                                </ol>
+                            </div>
+                            <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                                <h3>Struktur Memo Internal</h3>
+                                <ol style="margin-left: 20px; font-size: 0.95rem;">
+                                    <li>Kepala Memo (Kepada, Dari, Tanggal, Hal)</li>
+                                    <li>Isi Memo (Singkat, langsung ke tujuan/instruksi)</li>
+                                    <li>Inisial/Tanda tangan pembuat</li>
+                                </ol>
+                                <div style="margin-top: 15px; padding: 10px; background: #FEF2F2; border-left: 3px solid #EF4444; font-size: 0.85rem;">
+                                    <strong>Kesalahan Umum:</strong> Bertele-tele, lupa mencantumkan tanggal, format tidak konsisten.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: LATIHAN -->
+                <section id="view-latihan" class="view-section">
+                    <h1 class="page-title">Ruang Latihan Interaktif</h1>
+
+                    <div class="card">
+                        <h2>Bagian A: Analisis Studi Kasus</h2>
+                        
+                        <div class="case-study">
+                            <span style="background: var(--primary); color: white; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem;">Kasus 1</span>
+                            <p class="case-q">"Sebuah perusahaan akan mengadakan pelatihan peningkatan kapasitas bagi seluruh karyawan baru angkatan 2026. Anda sebagai staf HRD diminta membuat informasi tertulis untuk hal tersebut."</p>
+                            
+                            <label><strong>1. Jenis teks fungsional apa yang paling tepat (Memo/Surat Keluar)? Mengapa?</strong></label>
+                            <textarea class="answer-area" placeholder="Ketik jawaban analisis Anda di sini..."></textarea>
+                            
+                            <button class="btn btn-secondary" onclick="showFeedback('feedback-1')"><i class="ph ph-check-circle"></i> Tampilkan Kunci/Pembahasan</button>
+                            <div id="feedback-1" class="feedback-box">
+                                <strong>Pembahasan:</strong> Teks yang tepat adalah <strong>Memo Internal</strong> (atau Pengumuman Internal). Alasannya karena informasi tersebut ditujukan secara eksklusif untuk kalangan di dalam perusahaan itu sendiri (karyawan baru), bukan untuk pihak eksternal.
+                            </div>
+                        </div>
+
+                        <div class="case-study">
+                            <span style="background: var(--primary); color: white; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem;">Kasus 2</span>
+                            <p class="case-q">"Anda sebagai staf tata usaha sekolah harus mengundang orang tua/wali murid untuk rapat sosialisasi program sekolah."</p>
+                            <button class="btn btn-secondary" onclick="showFeedback('feedback-2')"><i class="ph ph-check-circle"></i> Tampilkan Kunci/Pembahasan</button>
+                            <div id="feedback-2" class="feedback-box">
+                                <strong>Pembahasan:</strong> Harus menggunakan <strong>Surat Resmi (Surat Undangan Dinas)</strong>. Karena ditujukan kepada pihak luar instansi (orang tua), harus menggunakan Kop Sekolah, Nomor surat yang jelas, dan bahasa baku yang sangat santun.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h2>Bagian B: Menyusun Kalimat Surat (Drag & Drop)</h2>
+                        <p>Tarik dan letakkan potongan kalimat di bawah ini ke kotak target abu-abu sesuai urutan penulisan paragraf pembuka dan isi surat undangan resmi yang logis!</p>
+                        
+                        <div class="dnd-container">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div>
+                                    <h4 style="margin-bottom: 10px; color: var(--text-muted);">Sumber Potongan Kalimat:</h4>
+                                    <div class="dnd-pool" id="pool-area">
+                                        <!-- Items will be injected by JS to allow shuffle -->
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 style="margin-bottom: 10px; color: var(--primary);">Susun di Sini (Atas ke Bawah):</h4>
+                                    <div class="dnd-target" id="target-area"></div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn" onclick="checkOrder()"><i class="ph ph-magnifying-glass"></i> Cek Susunan</button>
+                                <button class="btn btn-outline" onclick="initDragDrop()"><i class="ph ph-arrows-clockwise"></i> Acak Ulang</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: REFLEKSI -->
+                <section id="view-refleksi" class="view-section">
+                    <h1 class="page-title">Refleksi Pembelajaran</h1>
+                    <div class="card">
+                        <p>Silakan isi jurnal refleksi di bawah ini. Jawaban Anda akan otomatis tersimpan di perangkat ini (PID/Laptop).</p>
+                        
+                        <div class="reflection-form">
+                            <div>
+                                <label><strong>1. Apa hal baru yang saya pelajari hari ini terkait teks fungsional?</strong></label>
+                                <textarea class="answer-area ref-input" id="ref-1" oninput="saveReflection()"></textarea>
+                            </div>
+                            <div>
+                                <label><strong>2. Bagian mana yang menurut saya paling mudah dipahami?</strong></label>
+                                <textarea class="answer-area ref-input" id="ref-2" oninput="saveReflection()"></textarea>
+                            </div>
+                            <div>
+                                <label><strong>3. Bagian mana yang masih membingungkan dan perlu saya pelajari lagi?</strong></label>
+                                <textarea class="answer-area ref-input" id="ref-3" oninput="saveReflection()"></textarea>
+                            </div>
+                            <div>
+                                <label><strong>4. Bagaimana manfaat kemampuan menulis teks fungsional ini bagi masa depan karier saya?</strong></label>
+                                <textarea class="answer-area ref-input" id="ref-4" oninput="saveReflection()"></textarea>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: flex-end;">
+                                <button class="btn btn-outline" onclick="resetReflection()"><i class="ph ph-trash"></i> Kosongkan Formulir</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer -->
+                <footer class="app-footer">
+                    <div class="footer-container">
+                        <div class="footer-brand">
+                            <div class="footer-logo">S</div>
+                            <div>
+                                <p class="footer-title">Studiolpg</p>
+                                <p class="footer-copyright">&copy; 2026 Noviyalpg creative - Media Pembelajaran Interaktif</p>
+                            </div>
+                        </div>
+                        <div class="footer-socials">
+                            <a href="https://www.instagram.com/noviya.lpg?igsh=MWRlMHBraTc0eGt1bg%3D%3D" target="_blank" class="social-icon instagram"><i class="ph ph-instagram-logo"></i></a>
+                            <a href="https://www.tiktok.com/@noviyalpg?_t=ZS-8tafgg6Eeyl&amp;_r=1" target="_blank" class="social-icon tiktok"><i class="ph ph-tiktok-logo"></i></a>
+                            <a href="https://www.facebook.com/noviyalpg/" target="_blank" class="social-icon facebook"><i class="ph ph-facebook-logo"></i></a>
+                            <a href="https://s.id/youtube-noviyalpg" target="_blank" class="social-icon youtube"><i class="ph ph-youtube-logo"></i></a>
+                        </div>
+                    </div>
+                </footer>
+
+            </div> <!-- End Content Wrapper -->
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script>
+        // === STATE & PENGATURAN AWAL ===
+        let currentFontSize = 16;
+        let sfxEnabled = false; // Default mati agar tidak mengagetkan di kelas
+        let pointerMode = false;
+        
+        // Elemen Audio Context (Dibuat saat interaksi pertama untuk kebijakan browser)
+        let audioCtx = null;
+
+        // Inisialisasi setelah DOM dimuat
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hilangkan loading screen
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+            }, 800);
+
+            // Mulai jam
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // Setup Latihan Drag Drop
+            initDragDrop();
+
+            // Load data refleksi dari localStorage
+            loadReflection();
+        });
+
+        // === SISTEM AUDIO (SINTESIS WEB AUDIO API) ===
+        // Menggunakan sintesis agar tidak perlu file eksternal/base64 besar
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            if (!sfxEnabled) return;
+            initAudio();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            const now = audioCtx.currentTime;
+            
+            if (type === 'click' || type === 'nav') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } 
+            else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.setValueAtTime(600, now + 0.1);
+                osc.frequency.setValueAtTime(800, now + 0.2);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+            else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(150, now + 0.3);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        function toggleSfx() {
+            sfxEnabled = !sfxEnabled;
+            const btn = document.getElementById('btn-sfx');
+            if(sfxEnabled) {
+                initAudio();
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="ph ph-speaker-high"></i>';
+                showToast("Efek suara diaktifkan", "success");
+                playSound('click');
+            } else {
+                btn.classList.remove('active');
+                btn.innerHTML = '<i class="ph ph-speaker-slash"></i>';
+                showToast("Efek suara dimatikan", "info");
+            }
+        }
+
+        // === NAVIGASI MENU UTAMA ===
+        function navigate(viewId) {
+            playSound('nav');
+            
+            // Update active state di sidebar
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Sembunyikan semua section, tampilkan yang dipilih
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            
+            // Scroll ke atas
+            document.getElementById('content-wrapper').scrollTop = 0;
+            
+            // Tutup sidebar di versi mobile
+            if(window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        function handlePengembangClick() {
+            playSound('click');
+            // Konfirmasi sebelum pindah halaman agar tidak tidak sengaja hilang state
+            if(confirm("Anda akan diarahkan ke halaman profil pengembang. Lanjutkan?")) {
+                window.location.href = "https://s.id/noviyalpg";
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // === TAB MATERI ===
+        function openTab(tabId) {
+            playSound('click');
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // === KONTROL PID (TOP BAR) ===
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('realtime-clock').textContent = timeString;
+        }
+
+        function toggleFullscreen() {
+            playSound('click');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    showToast(`Error: ${err.message}`, "error");
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function changeFontSize(change) {
+            playSound('click');
+            currentFontSize += change;
+            // Batasan wajar ukuran teks
+            if(currentFontSize < 14) currentFontSize = 14;
+            if(currentFontSize > 28) currentFontSize = 28;
+            
+            document.documentElement.style.setProperty('--base-font-size', `${currentFontSize}px`);
+            showToast(`Ukuran teks: ${currentFontSize}px`, "info");
+        }
+
+        function togglePointerMode() {
+            playSound('click');
+            pointerMode = !pointerMode;
+            const btn = document.getElementById('btn-pointer');
+            
+            if(pointerMode) {
+                document.body.classList.add('pointer-mode');
+                btn.classList.add('active');
+                showToast("Mode Pointer Interaktif Aktif", "success");
+            } else {
+                document.body.classList.remove('pointer-mode');
+                btn.classList.remove('active');
+                showToast("Mode Pointer Nonaktif", "info");
+            }
+        }
+
+        // === FUNGSI MATERI & LATIHAN ===
+        
+        // Progress Simulasi
+        function simulateStudentProgress() {
+            playSound('click');
+            const target = Math.floor(Math.random() * 15) + 10; // Random 10-25 untuk simulasi
+            const el = document.getElementById('progress-text');
+            const circle = document.getElementById('class-progress-ui');
+            
+            el.textContent = `${target}/32`;
+            // Kalkulasi persentase untuk background conic gradient
+            const percent = (target / 32) * 100;
+            circle.style.background = `conic-gradient(var(--success) ${percent}%, var(--border) 0%)`;
+            
+            showToast("Data partisipasi kelas diperbarui", "success");
+        }
+
+        // Kuis Kosakata Materi 2
+        function checkWord(btn, isCorrect) {
+            // Reset others
+            document.querySelectorAll('.word-btn').forEach(b => {
+                b.classList.remove('correct', 'wrong');
+            });
+            
+            if(isCorrect) {
+                btn.classList.add('correct');
+                playSound('correct');
+                showToast("Tepat! 'Dengan hormat,' adalah sapaan baku surat resmi.", "success");
+            } else {
+                btn.classList.add('wrong');
+                playSound('wrong');
+            }
+        }
+
+        // Feedback Studi Kasus
+        function showFeedback(id) {
+            playSound('click');
+            const el = document.getElementById(id);
+            if(el.style.display === 'block') {
+                el.style.display = 'none';
+            } else {
+                el.style.display = 'block';
+                el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // === DRAG AND DROP (LATIHAN B) ===
+        const sentences = [
+            { id: 's1', text: 'Dengan hormat,', order: 1 },
+            { id: 's2', text: 'Melalui surat ini, kami mengundang Bapak/Ibu wali murid', order: 2 },
+            { id: 's3', text: 'Untuk menghadiri rapat sosialisasi program sekolah', order: 3 },
+            { id: 's4', text: 'Pada hari Senin, 15 Juli 2026', order: 4 }
+        ];
+
+        function initDragDrop() {
+            const pool = document.getElementById('pool-area');
+            const target = document.getElementById('target-area');
+            pool.innerHTML = '';
+            target.innerHTML = '';
+            
+            // Acak array
+            const shuffled = [...sentences].sort(() => Math.random() - 0.5);
+            
+            shuffled.forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'dnd-item';
+                el.draggable = true;
+                el.textContent = item.text;
+                el.dataset.id = item.id;
+                
+                // Event Listeners Drag API
+                el.addEventListener('dragstart', (e) => {
+                    el.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', item.id);
+                    playSound('click');
+                });
+                
+                el.addEventListener('dragend', () => {
+                    el.classList.remove('dragging');
+                });
+                
+                pool.appendChild(el);
+            });
+
+            setupDropZone(pool);
+            setupDropZone(target);
+        }
+
+        function setupDropZone(zone) {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault(); // Wajib untuk membolehkan drop
+            });
+            
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                const id = e.dataTransfer.getData('text/plain');
+                const draggable = document.querySelector(`.dnd-item[data-id="${id}"]`);
+                if(draggable) {
+                    zone.appendChild(draggable);
+                    playSound('click');
+                }
+            });
+        }
+
+        function checkOrder() {
+            const targetArea = document.getElementById('target-area');
+            const items = targetArea.querySelectorAll('.dnd-item');
+            
+            if(items.length < 4) {
+                showToast("Pindahkan semua potongan kalimat ke kotak target!", "error");
+                playSound('wrong');
+                return;
+            }
+
+            let isCorrect = true;
+            // Ambil urutan id dari elemen di target
+            const currentIds = Array.from(items).map(item => item.dataset.id);
+            // Susunan benar
+            const correctIds = ['s1', 's2', 's3', 's4'];
+
+            for(let i=0; i < correctIds.length; i++) {
+                if(currentIds[i] !== correctIds[i]) {
+                    isCorrect = false;
+                    break;
+                }
+            }
+
+            if(isCorrect) {
+                playSound('correct');
+                showToast("Luar Biasa! Susunan kalimat surat sudah tepat dan logis.", "success");
+                targetArea.style.borderColor = "var(--success)";
+                targetArea.style.backgroundColor = "#D1FAE5";
+            } else {
+                playSound('wrong');
+                showToast("Susunan belum tepat. Coba perhatikan urutan kelogisan kalimat.", "error");
+                targetArea.style.borderColor = "var(--danger)";
+            }
+        }
+
+        // === LOCAL STORAGE UNTUK REFLEKSI ===
+        function saveReflection() {
+            const data = {
+                ref1: document.getElementById('ref-1').value,
+                ref2: document.getElementById('ref-2').value,
+                ref3: document.getElementById('ref-3').value,
+                ref4: document.getElementById('ref-4').value
+            };
+            localStorage.setItem('refleksiTeksFungsional', JSON.stringify(data));
+        }
+
+        function loadReflection() {
+            const saved = localStorage.getItem('refleksiTeksFungsional');
+            if(saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    document.getElementById('ref-1').value = data.ref1 || '';
+                    document.getElementById('ref-2').value = data.ref2 || '';
+                    document.getElementById('ref-3').value = data.ref3 || '';
+                    document.getElementById('ref-4').value = data.ref4 || '';
+                } catch(e) { console.error("Error loading saved data", e); }
+            }
+        }
+
+        function resetReflection() {
+            if(confirm("Yakin ingin menghapus semua jawaban refleksi?")) {
+                playSound('click');
+                localStorage.removeItem('refleksiTeksFungsional');
+                document.querySelectorAll('.ref-input').forEach(el => el.value = '');
+                showToast("Formulir telah dikosongkan.", "info");
+            }
+        }
+
+        // === SISTEM NOTIFIKASI TOAST ===
+        function showToast(message, type = "info") {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            let icon = 'ph-info';
+            let color = 'var(--primary)';
+            
+            if(type === 'success') { icon = 'ph-check-circle'; color = 'var(--success)'; }
+            else if(type === 'error') { icon = 'ph-warning-circle'; color = 'var(--danger)'; }
+            
+            toast.style.borderLeftColor = color;
+            toast.innerHTML = `<i class="ph ${icon}" style="color: ${color}; font-size: 1.5rem;"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Hapus setelah 3.5 detik
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+    </script>
+</body>
+</html>
